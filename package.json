@@ -1,0 +1,16 @@
+{
+  "name": "simple-express-app",
+  "version": "1.0.0",
+  "description": "一个简单的 Express 应用程序",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+} 
