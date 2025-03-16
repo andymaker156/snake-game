@@ -1,0 +1,22 @@
+# 依赖目录
+node_modules/
+
+# 日志
+logs
+*.log
+npm-debug.log*
+
+# 运行时数据
+pids
+*.pid
+*.seed
+
+# 编辑器目录和文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 操作系统文件
+.DS_Store
+Thumbs.db 
