@@ -1,7 +1,7 @@
 {
   "name": "simple-express-app",
   "version": "1.0.0",
-  "description": "一个简单的 Express 应用程序",
+  "description": "Minimal Express app hosting a classic Snake game",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -13,4 +13,4 @@
   "devDependencies": {
     "nodemon": "^3.0.3"
   }
-} 
+}

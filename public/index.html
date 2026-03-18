@@ -1,33 +1,54 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Express 应用</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake</title>
+  <link rel="stylesheet" href="/snake.css">
 </head>
 <body>
-    <h1>欢迎来到 Express 应用</h1>
-    <div class="container">
-        <p>这是一个使用 Express.js 构建的简单应用程序。</p>
-        <p>你可以通过以下 API 端点进行测试：</p>
-        <ul>
-            <li><a href="/api/hello">GET /api/hello</a> - 获取问候消息</li>
-        </ul>
-    </div>
+  <main class="page">
+    <section class="card" aria-labelledby="game-title">
+      <div class="header">
+        <div>
+          <h1 id="game-title">Snake</h1>
+          <p class="subtitle">Classic grid movement, food, score, restart.</p>
+        </div>
+        <div class="scoreboard" aria-live="polite">
+          <span>Score</span>
+          <strong id="score">0</strong>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <p id="status">Press any arrow key or WASD to start.</p>
+        <div class="actions">
+          <button id="pause-button" type="button">Pause</button>
+          <button id="restart-button" type="button">Restart</button>
+        </div>
+      </div>
+
+      <div
+        id="board"
+        class="board"
+        role="grid"
+        aria-label="Snake game board"
+      ></div>
+
+      <section class="controls" aria-label="Touch controls">
+        <button type="button" data-direction="up" aria-label="Move up">Up</button>
+        <div class="controls-row">
+          <button type="button" data-direction="left" aria-label="Move left">Left</button>
+          <button type="button" data-direction="down" aria-label="Move down">Down</button>
+          <button type="button" data-direction="right" aria-label="Move right">Right</button>
+        </div>
+      </section>
+
+      <p class="help">Controls: Arrow keys or WASD. Space pauses. Restart resets the game.</p>
+    </section>
+  </main>
+
+  <script src="/snake-logic.js"></script>
+  <script src="/snake-game.js"></script>
 </body>
-</html> 
+</html>
