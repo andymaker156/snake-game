@@ -16,6 +16,7 @@
   function createInitialState(config = {}, randomFn = Math.random) {
     const width = config.width || 16;
     const height = config.height || 16;
+    const wrapWalls = Boolean(config.wrapWalls);
     const start = {
       x: Math.floor(width / 2),
       y: Math.floor(height / 2)
@@ -29,6 +30,7 @@
     return {
       width,
       height,
+      wrapWalls,
       snake,
       direction: 'right',
       pendingDirection: 'right',
@@ -36,7 +38,8 @@
       score: 0,
       isGameOver: false,
       isStarted: false,
-      isPaused: false
+      isPaused: false,
+      didWin: false
     };
   }
 
@@ -75,11 +78,7 @@
 
     const direction = state.pendingDirection || state.direction;
     const vector = DIRECTIONS[direction];
-    const nextHead = {
-      x: state.snake[0].x + vector.x,
-      y: state.snake[0].y + vector.y
-    };
-
+    const nextHead = moveHead(state.snake[0], vector, state.width, state.height, state.wrapWalls);
     const grows = nextHead.x === state.food.x && nextHead.y === state.food.y;
     const nextSnake = [nextHead, ...state.snake];
 
@@ -87,7 +86,7 @@
       nextSnake.pop();
     }
 
-    if (hitsWall(nextHead, state.width, state.height) || hitsSelf(nextSnake)) {
+    if ((!state.wrapWalls && hitsWall(nextHead, state.width, state.height)) || hitsSelf(nextSnake)) {
       return {
         ...state,
         snake: nextSnake,
@@ -97,13 +96,34 @@
       };
     }
 
+    const nextFood = grows ? placeFood(nextSnake, state.width, state.height, randomFn) : state.food;
+    const didWin = grows && nextFood === null;
+
     return {
       ...state,
       snake: nextSnake,
       direction,
       pendingDirection: direction,
-      food: grows ? placeFood(nextSnake, state.width, state.height, randomFn) : state.food,
-      score: grows ? state.score + 1 : state.score
+      food: nextFood,
+      score: grows ? state.score + 1 : state.score,
+      isGameOver: didWin,
+      didWin
+    };
+  }
+
+  function moveHead(head, vector, width, height, wrapWalls) {
+    const nextHead = {
+      x: head.x + vector.x,
+      y: head.y + vector.y
+    };
+
+    if (!wrapWalls) {
+      return nextHead;
+    }
+
+    return {
+      x: (nextHead.x + width) % width,
+      y: (nextHead.y + height) % height
     };
   }
 

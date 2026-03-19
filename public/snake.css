@@ -48,6 +48,8 @@ body {
 
 .header {
   margin-bottom: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .status-row {
@@ -72,6 +74,10 @@ h1 {
   text-align: right;
 }
 
+.score-secondary {
+  min-width: 84px;
+}
+
 .scoreboard span {
   display: block;
   font-size: 0.9rem;
@@ -88,18 +94,46 @@ h1 {
   gap: 8px;
 }
 
-button {
+.actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button,
+select {
   border: 1px solid var(--line);
   background: #f6f1e8;
   color: var(--text);
   border-radius: 8px;
   padding: 10px 14px;
   font: inherit;
+}
+
+button {
   cursor: pointer;
 }
 
-button:hover {
+button:hover,
+select:hover {
   background: #efe7da;
+}
+
+.field,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.field span,
+.toggle span {
+  white-space: nowrap;
+}
+
+.toggle input {
+  accent-color: var(--snake-head);
 }
 
 .board {
