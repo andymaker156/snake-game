@@ -22,6 +22,10 @@
           <span>Best</span>
           <strong id="best-score">0</strong>
         </div>
+        <div class="scoreboard score-streak" aria-live="polite">
+          <span>Streak</span>
+          <strong id="combo">—</strong>
+        </div>
       </div>
 
       <div class="status-row">
@@ -36,9 +40,25 @@
               <option value="70">Insane</option>
             </select>
           </label>
+          <label class="field" for="grid-select">
+            <span>Board</span>
+            <select id="grid-select">
+              <option value="12">12×12</option>
+              <option value="16" selected>16×16</option>
+              <option value="20">20×20</option>
+            </select>
+          </label>
           <label class="toggle" for="wrap-toggle">
             <input id="wrap-toggle" type="checkbox">
             <span>Wrap walls</span>
+          </label>
+          <label class="toggle" for="theme-toggle">
+            <input id="theme-toggle" type="checkbox">
+            <span>Dark</span>
+          </label>
+          <label class="toggle" for="sound-toggle">
+            <input id="sound-toggle" type="checkbox">
+            <span>Sound</span>
           </label>
           <button id="pause-button" type="button">Pause</button>
           <button id="restart-button" type="button">Restart</button>
@@ -61,7 +81,7 @@
         </div>
       </section>
 
-      <p class="help">Controls: Arrow keys or WASD. Space pauses. Restart resets the game. Change speed anytime. Wrap mode lets the snake loop through walls.</p>
+      <p class="help">Controls: Arrow keys or WASD. Space pauses. Golden food is worth 5 points. Streak counts quick consecutive eats. Sound uses short beeps (toggle off if you prefer silence).</p>
     </section>
   </main>
 

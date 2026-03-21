@@ -39,7 +39,8 @@
       isGameOver: false,
       isStarted: false,
       isPaused: false,
-      didWin: false
+      didWin: false,
+      lastAteBonus: false
     };
   }
 
@@ -79,7 +80,12 @@
     const direction = state.pendingDirection || state.direction;
     const vector = DIRECTIONS[direction];
     const nextHead = moveHead(state.snake[0], vector, state.width, state.height, state.wrapWalls);
-    const grows = nextHead.x === state.food.x && nextHead.y === state.food.y;
+    const grows =
+      state.food &&
+      nextHead.x === state.food.x &&
+      nextHead.y === state.food.y;
+    const ateBonus = Boolean(grows && state.food.bonus);
+    const points = grows ? (ateBonus ? 5 : 1) : 0;
     const nextSnake = [nextHead, ...state.snake];
 
     if (!grows) {
@@ -92,7 +98,8 @@
         snake: nextSnake,
         direction,
         pendingDirection: direction,
-        isGameOver: true
+        isGameOver: true,
+        lastAteBonus: false
       };
     }
 
@@ -105,9 +112,10 @@
       direction,
       pendingDirection: direction,
       food: nextFood,
-      score: grows ? state.score + 1 : state.score,
+      score: grows ? state.score + points : state.score,
       isGameOver: didWin,
-      didWin
+      didWin,
+      lastAteBonus: grows ? ateBonus : false
     };
   }
 
@@ -154,7 +162,9 @@
     }
 
     const index = Math.floor(randomFn() * openCells.length);
-    return openCells[index];
+    const picked = openCells[index];
+    const bonus = randomFn() < 0.14;
+    return { x: picked.x, y: picked.y, bonus };
   }
 
   const api = {
