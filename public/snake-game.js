@@ -5,7 +5,10 @@
     best: 'snake-best-score',
     theme: 'snake-theme',
     grid: 'snake-grid-size',
-    sound: 'snake-sound-enabled'
+    sound: 'snake-sound-enabled',
+    history: 'snake-score-history',
+    games: 'snake-games-played',
+    wins: 'snake-games-won'
   };
 
   const board = document.getElementById('board');
@@ -20,11 +23,18 @@
   const gridSelect = document.getElementById('grid-select');
   const themeToggle = document.getElementById('theme-toggle');
   const soundToggle = document.getElementById('sound-toggle');
+  const historyList = document.getElementById('score-history');
+  const historyGamesPlayed = document.getElementById('history-games-played');
+  const historyWins = document.getElementById('history-wins');
+  const historyAverage = document.getElementById('history-average');
   const controlButtons = Array.from(document.querySelectorAll('[data-direction]'));
 
   let tickMs = DEFAULT_TICK_MS;
   let storedBestScore = loadBestScore();
   let gridSize = loadGridSize();
+  let scoreHistory = loadScoreHistory();
+  let totalGamesPlayed = loadGamesPlayed();
+  let totalWins = loadWins();
   let cellGrid = null;
   let cachedW = 0;
   let cachedH = 0;
@@ -44,6 +54,59 @@
   function saveBestScore(nextBestScore) {
     storedBestScore = nextBestScore;
     window.localStorage.setItem(STORAGE_KEYS.best, String(nextBestScore));
+  }
+
+  function loadScoreHistory() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEYS.history);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveScoreHistory(history) {
+    scoreHistory = history;
+    window.localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(history));
+  }
+
+  function loadGamesPlayed() {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.games);
+    const value = Number.parseInt(raw || '0', 10);
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+  }
+
+  function saveGamesPlayed(value) {
+    totalGamesPlayed = value;
+    window.localStorage.setItem(STORAGE_KEYS.games, String(value));
+  }
+
+  function loadWins() {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.wins);
+    const value = Number.parseInt(raw || '0', 10);
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+  }
+
+  function saveWins(value) {
+    totalWins = value;
+    window.localStorage.setItem(STORAGE_KEYS.wins, String(value));
+  }
+
+  function addScoreToHistory(scoreValue, width, didWin) {
+    const entry = {
+      score: scoreValue,
+      width,
+      result: didWin ? 'Win' : 'Game over',
+      date: new Date().toISOString()
+    };
+    const nextHistory = [entry, ...scoreHistory].slice(0, 5);
+    saveScoreHistory(nextHistory);
+    if (didWin) {
+      saveWins(totalWins + 1);
+    }
+    saveGamesPlayed(totalGamesPlayed + 1);
+    renderHistory();
   }
 
   function loadGridSize() {
@@ -176,6 +239,52 @@
     cachedH = state.height;
   }
 
+  function renderHistorySummary() {
+    if (historyGamesPlayed) {
+      historyGamesPlayed.textContent = String(totalGamesPlayed);
+    }
+    if (historyWins) {
+      historyWins.textContent = String(totalWins);
+    }
+    if (historyAverage) {
+      const average = scoreHistory.length > 0
+        ? Math.round(scoreHistory.reduce((sum, entry) => sum + entry.score, 0) / scoreHistory.length)
+        : 0;
+      historyAverage.textContent = String(average);
+    }
+  }
+
+  function renderHistory() {
+    if (!historyList) {
+      renderHistorySummary();
+      return;
+    }
+
+    historyList.innerHTML = '';
+    if (scoreHistory.length === 0) {
+      const item = document.createElement('li');
+      item.className = 'history-empty';
+      item.textContent = 'No completed games yet. Play and score to populate history.';
+      historyList.appendChild(item);
+      renderHistorySummary();
+      return;
+    }
+
+    scoreHistory.forEach((entry) => {
+      const item = document.createElement('li');
+      item.className = 'history-item';
+      const date = new Date(entry.date);
+      item.innerHTML = `
+        <span class="history-result">${entry.result}</span>
+        <span class="history-score">${entry.score} pts</span>
+        <span class="history-extra">${entry.width}×${entry.width}</span>
+        <span class="history-date">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>
+      `;
+      historyList.appendChild(item);
+    });
+    renderHistorySummary();
+  }
+
   function render() {
     ensureBoardBuilt();
 
@@ -239,6 +348,8 @@
     }
   }
 
+  let gameOverRecorded = false;
+
   function afterStep(prevScore) {
     const grew = state.score > prevScore;
     if (grew) {
@@ -251,6 +362,10 @@
     }
 
     if (state.isGameOver) {
+      if (!gameOverRecorded) {
+        addScoreToHistory(state.score, state.width, state.didWin);
+        gameOverRecorded = true;
+      }
       if (state.didWin) {
         playWin();
       } else {
@@ -299,6 +414,7 @@
       height: gridSize
     });
     stopLoop();
+    gameOverRecorded = false;
     resetComboDisplay();
     render();
   }
@@ -408,5 +524,6 @@
     gridSelect.value = String(gridSize);
   }
 
+  renderHistory();
   render();
 })();
