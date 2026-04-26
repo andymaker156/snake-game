@@ -196,7 +196,7 @@ select:hover {
   gap: 10px;
 }
 
-.history-item,
+..history-item,
 .history-empty {
   display: grid;
   gap: 4px;
@@ -206,33 +206,31 @@ select:hover {
   background: var(--panel);
 }
 
-  .history-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
-  }
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
-  .history-stats div {
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--bg);
-    text-align: center;
-  }
+.history-stats div {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  text-align: center;
+}
 
-  .history-stats strong {
-    display: block;
-    font-size: 1.4rem;
-    margin-bottom: 4px;
-    color: var(--text);
-  }
+.history-stats strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+  color: var(--text);
+}
 
-  .history-stats span {
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
+.history-stats span {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .history-result {
@@ -258,11 +256,24 @@ select:hover {
   text-align: center;
 }
 
-  background: var(--snake-body);
+.cell {
+  background: var(--cell);
+  border-radius: 2px;
+}
+
+.cell.snake {
+  background: #2c8a4a;
+  border: 1px solid #1f6034;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+
+.cell.snake.body {
+  background: #1f6f3b;
 }
 
 .cell.snake.tail {
-  background: var(--snake-tail);
+  background: #15552c;
 }
 
 .cell.head {
