@@ -1,0 +1,107 @@
+version: "1.0.0"
+generatedBy: "edp-6-mcp"
+timestamp: "2026-04-27T00:00:00-04:00"
+intentName: "snake-ui-refresh"
+originalIntent: "use ct-devmcp do_plan"
+derivedContext: |
+  The requested PLAN phase follows completed DISCOVER and IDEATE work for the
+  snake-game repository. DISCOVER found the live app is a dark arcade dashboard.
+  IDEATE produced three visual concepts: Arcade Focus, Compact Dashboard, and
+  Mobile First. This plan chooses the simplest implementation path that evolves
+  the current live design without replacing the app structure.
+scope:
+  allowedPaths:
+    - "public/index.html"
+    - "public/snake.css"
+    - "public/snake-game.js"
+  forbiddenPaths:
+    - "public/snake-logic.js"
+    - "app.js"
+    - "package.json"
+    - "package-lock.json"
+    - "README.md"
+    - "scripts/"
+    - ".mcp.json"
+    - ".vscode/"
+  newFiles:
+    - "None"
+apiContracts:
+  - name: "render"
+    type: "function"
+    params: []
+    returns: "void"
+    required: true
+    plannedChange: "No contract change; may update status text only if needed for clearer UI copy."
+  - name: "applyTheme"
+    type: "function"
+    params:
+      - name: "mode"
+        type: "string"
+    returns: "void"
+    required: true
+    plannedChange: "Either keep existing dark-only behavior and remove misleading UI affordance, or add minimal CSS variable overrides for true light mode. Preferred KISS path: remove misleading light/dark toggle from UI if not required."
+  - name: "controlButtons"
+    type: "DOM collection"
+    params: []
+    returns: "Array<Element>"
+    required: true
+    plannedChange: "No contract change; preserve existing D-pad data-direction hooks."
+acceptanceCriteria:
+  - id: "AC-001"
+    description: "The live UI keeps the existing dark arcade identity while giving the board clearer priority."
+    given: "The user opens the game on desktop."
+    when: "The page renders at a desktop viewport."
+    then: "The board remains the dominant visual element and score/status controls remain visible without layout overlap."
+  - id: "AC-002"
+    description: "The UI avoids misleading theme behavior."
+    given: "The live app has no real light theme variables."
+    when: "The page renders."
+    then: "The UI does not present a theme toggle that implies a functional light mode unless a minimal real light mode is implemented."
+  - id: "AC-003"
+    description: "Touch controls remain usable and accessible."
+    given: "The user is on a small viewport."
+    when: "The D-pad appears."
+    then: "Direction buttons remain at least 44x44 CSS pixels, have accessible labels, and do not overlap the board or panels."
+  - id: "AC-004"
+    description: "History and leaderboard remain available without increasing app complexity."
+    given: "The user completes games or saves scores."
+    when: "History and leaderboard panels update."
+    then: "Existing localStorage-driven behavior continues to work unchanged."
+  - id: "AC-005"
+    description: "Responsive layout remains coherent."
+    given: "The page is viewed at desktop, tablet, and mobile widths."
+    when: "The layout reflows."
+    then: "Text, buttons, board, scoreboxes, history, and leaderboard do not overlap or overflow their containers."
+  - id: "AC-006"
+    description: "No game logic behavior changes."
+    given: "Existing snake movement, scoring, obstacles, powerups, history, and leaderboard behavior."
+    when: "The UI refresh is applied."
+    then: "Core game tests and manual gameplay behavior remain equivalent."
+nonGoals:
+  - "Do not replace the app with a new framework."
+  - "Do not add dependencies."
+  - "Do not change game rules, scoring, powerups, obstacles, or persistence schema."
+  - "Do not create backend leaderboard or authentication."
+  - "Do not implement all three IDEATE mockups."
+  - "Do not add animations beyond existing simple cell pulse effects."
+complexityBudget:
+  maxNewFunctions: 1
+  maxNewFiles: 0
+  maxLinesOfCode: 180
+  maxDependencies: 0
+  maxModifiedFiles: 3
+reuseTargets:
+  featureReuse: "90%+"
+  architectureReuse: "95%+"
+  uxReuse: "85%+"
+  cssPatternReuse: "80%+"
+validation:
+  commands:
+    - "npm start"
+    - "Manual browser check at desktop, tablet, and mobile viewport widths"
+    - "Manual gameplay smoke test: start, pause, restart, change direction, save leaderboard"
+  visualChecks:
+    - "Board is visually dominant."
+    - "Controls remain readable and clickable."
+    - "History and leaderboard remain scannable."
+    - "No text overlap at 320px width."

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Card-Based Design</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f3efe7 0%, #efe8dc 100%);
+      color: #2f2a24;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .leaderboard-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .leaderboard-header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #3f7d4a, #cf5a3a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .leaderboard-header p {
+      margin: 8px 0 0 0;
+      color: #6c6257;
+      font-size: 0.95rem;
+    }
+    .podium {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .medal {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(47, 42, 36, 0.1);
+      border: 2px solid #efe8dc;
+      position: relative;
+      top: 0;
+      transition: transform 0.2s;
+    }
+    .medal:hover { transform: translateY(-4px); }
+    .medal.first {
+      border-color: #ffd54f;
+      background: #fffdf8;
+      grid-column: 1 / 2;
+      order: 2;
+    }
+    .medal.second {
+      border-color: #c0c0c0;
+      background: #fffdf8;
+      grid-column: 2 / 3;
+      order: 1;
+    }
+    .medal.third {
+      border-color: #cd7f32;
+      background: #fffdf8;
+      grid-column: 3 / 4;
+      order: 3;
+    }
+    .medal-emoji {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+    .medal-rank { font-size: 2rem; font-weight: bold; margin: 8px 0; }
+    .medal-name { font-weight: 600; font-size: 1rem; }
+    .medal-score { font-size: 1.4rem; font-weight: 700; color: #3f7d4a; margin-top: 8px; }
+    .rest-list {
+      display: grid;
+      gap: 12px;
+    }
+    .rest-item {
+      background: white;
+      border: 1px solid #d5cfc4;
+      border-radius: 8px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 50px 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .rest-item:hover { box-shadow: 0 4px 12px rgba(47, 42, 36, 0.08); transition: 0.2s; }
+    .rest-rank {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #6c6257;
+    }
+    .rest-info div:first-child { font-weight: 600; margin-bottom: 4px; }
+    .rest-info div:last-child { font-size: 0.85rem; color: #9a9288; }
+    .rest-score { font-weight: 700; font-size: 1.1rem; }
+    @media (max-width: 600px) {
+      .leaderboard-header h1 { font-size: 1.8rem; }
+      .podium { gap: 8px; }
+      .medal { padding: 16px; }
+      .rest-item { grid-template-columns: 40px 1fr auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="leaderboard-header">
+      <h1>🏆 Leaderboard</h1>
+      <p>See who conquered the grid</p>
+    </div>
+
+    <div class="podium">
+      <div class="medal second">
+        <div class="medal-emoji">🥈</div>
+        <div class="medal-rank">#2</div>
+        <div class="medal-name">SpeedRunner</div>
+        <div class="medal-score">2,180 pts</div>
+      </div>
+      <div class="medal first">
+        <div class="medal-emoji">🥇</div>
+        <div class="medal-rank">#1</div>
+        <div class="medal-name">AlexSnake</div>
+        <div class="medal-score">2,450 pts</div>
+      </div>
+      <div class="medal third">
+        <div class="medal-emoji">🥉</div>
+        <div class="medal-rank">#3</div>
+        <div class="medal-name">GridMaster</div>
+        <div class="medal-score">1,950 pts</div>
+      </div>
+    </div>
+
+    <div class="rest-list">
+      <div class="rest-item">
+        <div class="rest-rank">4</div>
+        <div class="rest-info">
+          <div>CasualPlayer</div>
+          <div>16×16 grid • 3h ago</div>
+        </div>
+        <div class="rest-score">1,420</div>
+      </div>
+      <div class="rest-item">
+        <div class="rest-rank">5</div>
+        <div class="rest-info">
+          <div>FoodHunter</div>
+          <div>16×16 grid • 6h ago</div>
+        </div>
+        <div class="rest-score">980</div>
+      </div>
+      <div class="rest-item">
+        <div class="rest-rank">6</div>
+        <div class="rest-info">
+          <div>NoviceNinja</div>
+          <div>12×12 grid • 1d ago</div>
+        </div>
+        <div class="rest-score">720</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

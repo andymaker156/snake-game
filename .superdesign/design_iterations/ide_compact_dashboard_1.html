@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Concept - Compact Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #111318;
+      --panel: #1a1d24;
+      --panel-2: #222630;
+      --line: rgba(255,255,255,0.13);
+      --text: #f7f8fb;
+      --muted: #aab2bf;
+      --green: #80f05b;
+      --red: #ff5f76;
+      --yellow: #ffd14a;
+      --cyan: #52c8ff;
+      --orange: #ff9a3c;
+    }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #111318;
+      color: var(--text);
+    }
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(360px, 1fr) 320px;
+      gap: 12px;
+      padding: 12px;
+    }
+    aside, .game, .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+    aside { padding: 14px; display: grid; align-content: start; gap: 12px; }
+    h1, h2, p { margin: 0; }
+    h1 { font-size: 1.6rem; color: var(--green); text-transform: uppercase; letter-spacing: 0; }
+    h2 { font-size: 0.88rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+    .status { color: var(--muted); line-height: 1.4; }
+    .settings { display: grid; gap: 8px; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: 0.84rem; }
+    select, input, button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+    }
+    button { font-weight: 700; cursor: pointer; }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+    .game { display: grid; grid-template-rows: auto 1fr auto; gap: 12px; padding: 14px; min-width: 0; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 8px;
+    }
+    .metric {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+    }
+    .metric span { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+    .metric strong { display: block; margin-top: 4px; font-size: 1.45rem; }
+    .board {
+      align-self: center;
+      justify-self: center;
+      width: min(100%, 70vh);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 3px;
+      padding: 10px;
+      border: 2px solid rgba(128,240,91,0.28);
+      border-radius: 12px;
+      background: #151923;
+    }
+    .cell { border-radius: 5px; background: rgba(255,255,255,0.055); }
+    .snake { background: var(--green); }
+    .food { background: var(--red); }
+    .bonus { background: var(--yellow); }
+    .obstacle { background: #555b66; }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(3, 46px);
+      gap: 6px;
+      justify-content: center;
+    }
+    .dpad button { border-radius: 8px; padding: 0; color: var(--green); }
+    .up { grid-column: 2; }
+    .left { grid-column: 1; grid-row: 2; }
+    .right { grid-column: 3; grid-row: 2; }
+    .down { grid-column: 2; grid-row: 3; }
+    .side { display: grid; gap: 12px; align-content: start; }
+    .panel { padding: 12px; }
+    .row {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .row:last-child { border-bottom: 0; }
+    .rank { color: var(--orange); font-weight: 800; }
+    .meta { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .score { color: var(--yellow); font-weight: 900; }
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { grid-template-columns: 1fr; }
+      .board { width: min(100%, 560px); }
+    }
+    @media (max-width: 560px) {
+      .shell { padding: 8px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside>
+      <div>
+        <h1>Snake</h1>
+        <p class="status">Dashboard mode keeps settings, history, and leaderboard visible for repeated runs.</p>
+      </div>
+      <section class="settings" aria-label="Settings">
+        <h2>Run Setup</h2>
+        <label>Difficulty <select><option>Classic</option><option>Hard</option><option>Insane</option></select></label>
+        <label>Speed <select><option>Classic</option><option>Fast</option></select></label>
+        <label>Player <input value="Player"></label>
+        <button>Restart Run</button>
+      </section>
+    </aside>
+    <section class="game" aria-label="Game area">
+      <div class="metrics">
+        <div class="metric"><span>Score</span><strong>42</strong></div>
+        <div class="metric"><span>Best</span><strong>128</strong></div>
+        <div class="metric"><span>Streak</span><strong>x3</strong></div>
+        <div class="metric"><span>Mode</span><strong>16</strong></div>
+      </div>
+      <div class="board" aria-label="Snake board">
+        <script>
+          const map = new Map([[88,'snake'],[89,'snake'],[90,'snake'],[91,'snake'],[107,'snake'],[123,'snake'],[139,'snake'],[155,'snake'],[171,'snake'],[172,'snake'],[173,'snake'],[68,'food'],[201,'bonus'],[45,'obstacle'],[46,'obstacle'],[47,'obstacle'],[190,'obstacle']]);
+          for (let i = 0; i < 256; i += 1) {
+            const div = document.createElement('div');
+            div.className = `cell ${map.get(i) || ''}`;
+            document.currentScript.parentElement.appendChild(div);
+          }
+        </script>
+      </div>
+      <nav class="dpad" aria-label="Touch controls">
+        <button class="up" aria-label="Move up">↑</button>
+        <button class="left" aria-label="Move left">←</button>
+        <button class="right" aria-label="Move right">→</button>
+        <button class="down" aria-label="Move down">↓</button>
+      </nav>
+    </section>
+    <div class="side">
+      <section class="panel" aria-label="Leaderboard">
+        <h2>Leaderboard</h2>
+        <div class="row"><span class="rank">#1</span><span>Ada<div class="meta">Hard - today</div></span><span class="score">188</span></div>
+        <div class="row"><span class="rank">#2</span><span>Lin<div class="meta">Classic - today</div></span><span class="score">128</span></div>
+        <div class="row"><span class="rank">#3</span><span>Max<div class="meta">Insane - Mon</div></span><span class="score">96</span></div>
+      </section>
+      <section class="panel" aria-label="Recent games">
+        <h2>Recent Games</h2>
+        <div class="row"><span class="rank">W</span><span>Classic<div class="meta">16x16 board</div></span><span class="score">42</span></div>
+        <div class="row"><span class="rank">G</span><span>Hard<div class="meta">20x20 board</div></span><span class="score">31</span></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

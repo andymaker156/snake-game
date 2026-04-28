@@ -1,14 +1,40 @@
 (function () {
   const { createInitialState, setDirection, step, togglePause } = window.SnakeLogic;
   const DEFAULT_TICK_MS = 140;
+  const MAX_HISTORY_ENTRIES = 5;
+  const MAX_LEADERBOARD_ENTRIES = 50;
+  const SPEED_BOOST_MULTIPLIER = 0.7;
+
   const STORAGE_KEYS = {
     best: 'snake-best-score',
-    theme: 'snake-theme',
     grid: 'snake-grid-size',
+    speed: 'snake-speed',
     sound: 'snake-sound-enabled',
     history: 'snake-score-history',
     games: 'snake-games-played',
-    wins: 'snake-games-won'
+    wins: 'snake-games-won',
+    difficulty: 'snake-difficulty',
+    leaderboard: 'snake-leaderboard',
+    playerName: 'snake-player-name'
+  };
+
+  const DIFFICULTY_PRESETS = {
+    custom: { label: 'Classic', speed: DEFAULT_TICK_MS, gridSize: 16 },
+    easy: { label: 'Easy', speed: 180, gridSize: 12 },
+    normal: { label: 'Normal', speed: 140, gridSize: 16 },
+    hard: { label: 'Hard', speed: 100, gridSize: 20 },
+    insane: { label: 'Insane', speed: 70, gridSize: 20 }
+  };
+
+  const KEY_TO_DIRECTION = {
+    arrowup: 'up',
+    w: 'up',
+    arrowdown: 'down',
+    s: 'down',
+    arrowleft: 'left',
+    a: 'left',
+    arrowright: 'right',
+    d: 'right'
   };
 
   const board = document.getElementById('board');
@@ -21,29 +47,40 @@
   const speedSelect = document.getElementById('speed-select');
   const wrapToggle = document.getElementById('wrap-toggle');
   const gridSelect = document.getElementById('grid-select');
-  const themeToggle = document.getElementById('theme-toggle');
+  const difficultySelect = document.getElementById('difficulty-select');
   const soundToggle = document.getElementById('sound-toggle');
   const historyList = document.getElementById('score-history');
   const historyGamesPlayed = document.getElementById('history-games-played');
   const historyWins = document.getElementById('history-wins');
   const historyAverage = document.getElementById('history-average');
+  const leaderboardForm = document.getElementById('leaderboard-form');
+  const leaderboardList = document.getElementById('leaderboard-list');
+  const leaderboardFilter = document.getElementById('leaderboard-filter');
+  const saveLeaderboardButton = document.getElementById('save-leaderboard-button');
+  const playerNameInput = document.getElementById('player-name');
   const controlButtons = Array.from(document.querySelectorAll('[data-direction]'));
 
-  let tickMs = DEFAULT_TICK_MS;
-  let storedBestScore = loadBestScore();
+  let difficulty = loadDifficulty();
+  let tickMs = loadSpeed();
   let gridSize = loadGridSize();
+  let storedBestScore = loadBestScore();
   let scoreHistory = loadScoreHistory();
-  let totalGamesPlayed = loadGamesPlayed();
-  let totalWins = loadWins();
+  let leaderboardEntries = loadLeaderboardEntries();
+  let totalGamesPlayed = loadNumber(STORAGE_KEYS.games, 0);
+  let totalWins = loadNumber(STORAGE_KEYS.wins, 0);
   let cellGrid = null;
   let cachedW = 0;
   let cachedH = 0;
   let combo = 0;
   let comboTimer = null;
   let audioCtx = null;
-
-  let state = createInitialState({ wrapWalls: wrapToggle.checked, width: gridSize, height: gridSize });
+  let gameOverRecorded = false;
+  let lastCompletedGame = null;
   let timerId = null;
+
+  applyPresetIfNeeded();
+
+  let state = createGameState();
 
   function loadBestScore() {
     const raw = window.localStorage.getItem(STORAGE_KEYS.best);
@@ -56,9 +93,68 @@
     window.localStorage.setItem(STORAGE_KEYS.best, String(nextBestScore));
   }
 
-  function loadScoreHistory() {
+  function loadNumber(key, defaultValue = 0) {
+    const raw = window.localStorage.getItem(key);
+    const value = Number.parseInt(raw || String(defaultValue), 10);
+    return Number.isFinite(value) && value >= 0 ? value : defaultValue;
+  }
+
+  function saveNumber(key, value) {
+    window.localStorage.setItem(key, String(value));
+  }
+
+  function loadSpeed() {
+    const value = loadNumber(STORAGE_KEYS.speed, DEFAULT_TICK_MS);
+    return [70, 100, 140, 180].includes(value) ? value : DEFAULT_TICK_MS;
+  }
+
+  function saveSpeed(value) {
+    window.localStorage.setItem(STORAGE_KEYS.speed, String(value));
+  }
+
+  function loadGridSize() {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.grid);
+    const value = Number.parseInt(raw || '16', 10);
+    return [12, 16, 20].includes(value) ? value : 16;
+  }
+
+  function saveGridSize(value) {
+    window.localStorage.setItem(STORAGE_KEYS.grid, String(value));
+  }
+
+  function loadDifficulty() {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.difficulty) || 'custom';
+    return DIFFICULTY_PRESETS[raw] ? raw : 'custom';
+  }
+
+  function saveDifficulty(value) {
+    difficulty = DIFFICULTY_PRESETS[value] ? value : 'custom';
+    window.localStorage.setItem(STORAGE_KEYS.difficulty, difficulty);
+  }
+
+  function applyPresetIfNeeded() {
+    if (difficulty === 'custom') {
+      return;
+    }
+    const preset = DIFFICULTY_PRESETS[difficulty];
+    tickMs = preset.speed;
+    gridSize = preset.gridSize;
+    saveSpeed(tickMs);
+    saveGridSize(gridSize);
+  }
+
+  function createGameState() {
+    return createInitialState({
+      wrapWalls: wrapToggle.checked,
+      width: gridSize,
+      height: gridSize,
+      difficulty
+    });
+  }
+
+  function loadJsonArray(key) {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEYS.history);
+      const raw = window.localStorage.getItem(key);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
@@ -66,56 +162,72 @@
     }
   }
 
+  function loadScoreHistory() {
+    return loadJsonArray(STORAGE_KEYS.history);
+  }
+
   function saveScoreHistory(history) {
     scoreHistory = history;
     window.localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(history));
   }
 
-  function loadGamesPlayed() {
-    const raw = window.localStorage.getItem(STORAGE_KEYS.games);
-    const value = Number.parseInt(raw || '0', 10);
-    return Number.isFinite(value) && value >= 0 ? value : 0;
+  function loadLeaderboardEntries() {
+    return loadJsonArray(STORAGE_KEYS.leaderboard);
   }
 
-  function saveGamesPlayed(value) {
-    totalGamesPlayed = value;
-    window.localStorage.setItem(STORAGE_KEYS.games, String(value));
+  function saveLeaderboardEntries(entries) {
+    leaderboardEntries = entries
+      .slice()
+      .sort((a, b) => b.score - a.score || new Date(b.date) - new Date(a.date))
+      .slice(0, MAX_LEADERBOARD_ENTRIES);
+    window.localStorage.setItem(STORAGE_KEYS.leaderboard, JSON.stringify(leaderboardEntries));
   }
 
-  function loadWins() {
-    const raw = window.localStorage.getItem(STORAGE_KEYS.wins);
-    const value = Number.parseInt(raw || '0', 10);
-    return Number.isFinite(value) && value >= 0 ? value : 0;
+  function addLeaderboardEntry(playerName, completedGame) {
+    const cleanName = (playerName || 'Player').trim().slice(0, 16) || 'Player';
+    const entry = {
+      playerName: cleanName,
+      score: completedGame.score,
+      difficulty: completedGame.difficulty,
+      gridSize: completedGame.width,
+      date: completedGame.date
+    };
+    saveLeaderboardEntries([...leaderboardEntries, entry]);
+    window.localStorage.setItem(STORAGE_KEYS.playerName, cleanName);
+    lastCompletedGame = { ...completedGame, saved: true };
+    renderLeaderboard();
+    renderSaveScoreState();
   }
 
-  function saveWins(value) {
-    totalWins = value;
-    window.localStorage.setItem(STORAGE_KEYS.wins, String(value));
+  function getLeaderboardEntries(limit, filter) {
+    const entries = filter && filter !== 'all'
+      ? leaderboardEntries.filter((entry) => (entry.difficulty || 'custom') === filter)
+      : leaderboardEntries;
+    return entries.slice(0, limit);
   }
 
   function addScoreToHistory(scoreValue, width, didWin) {
     const entry = {
       score: scoreValue,
       width,
+      difficulty,
       result: didWin ? 'Win' : 'Game over',
       date: new Date().toISOString()
     };
-    const nextHistory = [entry, ...scoreHistory].slice(0, 5);
-    saveScoreHistory(nextHistory);
+    lastCompletedGame = { ...entry, saved: false };
+    saveScoreHistory([entry, ...scoreHistory]);
     if (didWin) {
-      saveWins(totalWins + 1);
+      totalWins += 1;
+      saveNumber(STORAGE_KEYS.wins, totalWins);
     }
-    saveGamesPlayed(totalGamesPlayed + 1);
+    totalGamesPlayed += 1;
+    saveNumber(STORAGE_KEYS.games, totalGamesPlayed);
     renderHistory();
+    renderSaveScoreState();
   }
 
-  function loadGridSize() {
-    const raw = window.localStorage.getItem(STORAGE_KEYS.grid);
-    const value = Number.parseInt(raw || '16', 10);
-    if (value === 12 || value === 16 || value === 20) {
-      return value;
-    }
-    return 16;
+  function getRecentHistory() {
+    return scoreHistory.slice(0, MAX_HISTORY_ENTRIES);
   }
 
   function loadSoundEnabled() {
@@ -124,21 +236,6 @@
 
   function saveSoundEnabled(on) {
     window.localStorage.setItem(STORAGE_KEYS.sound, on ? '1' : '0');
-  }
-
-  function loadTheme() {
-    return window.localStorage.getItem(STORAGE_KEYS.theme) === 'dark' ? 'dark' : 'light';
-  }
-
-  function saveTheme(mode) {
-    window.localStorage.setItem(STORAGE_KEYS.theme, mode);
-  }
-
-  function applyTheme(mode) {
-    document.documentElement.dataset.theme = mode === 'dark' ? 'dark' : 'light';
-    if (themeToggle) {
-      themeToggle.checked = mode === 'dark';
-    }
   }
 
   function getAudioContext() {
@@ -177,6 +274,11 @@
     window.setTimeout(() => playTone(1100, 0.06, 'square', 0.05), 40);
   }
 
+  function playPowerUp() {
+    playTone(740, 0.08, 'triangle', 0.05);
+    window.setTimeout(() => playTone(980, 0.08, 'triangle', 0.05), 55);
+  }
+
   function playGameOver() {
     playTone(180, 0.25, 'sawtooth', 0.06);
   }
@@ -186,11 +288,25 @@
     window.setTimeout(() => playTone(880, 0.12, 'square', 0.05), 90);
   }
 
+  function playObstacle() {
+    playTone(150, 0.15, 'sawtooth', 0.06);
+  }
+
+  function hasActiveEffect(effectType) {
+    return state.activeEffects && state.activeEffects.some((effect) => effect.type === effectType);
+  }
+
+  function getEffectiveTickMs() {
+    if (hasActiveEffect('speed-boost')) {
+      return Math.max(45, Math.round(tickMs * SPEED_BOOST_MULTIPLIER));
+    }
+    return tickMs;
+  }
+
   function syncBestScore() {
     if (state.score > storedBestScore) {
       saveBestScore(state.score);
     }
-
     bestScore.textContent = String(storedBestScore);
   }
 
@@ -206,7 +322,7 @@
     }
     comboTimer = now;
     if (comboEl) {
-      comboEl.textContent = combo > 1 ? `×${combo}` : '—';
+      comboEl.textContent = combo > 1 ? `x${combo}` : '-';
     }
   }
 
@@ -214,7 +330,7 @@
     combo = 0;
     comboTimer = null;
     if (comboEl) {
-      comboEl.textContent = '—';
+      comboEl.textContent = '-';
     }
   }
 
@@ -254,14 +370,29 @@
     }
   }
 
+  function getDifficultyLabel(value) {
+    return DIFFICULTY_PRESETS[value] ? DIFFICULTY_PRESETS[value].label : DIFFICULTY_PRESETS.custom.label;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function renderHistory() {
     if (!historyList) {
       renderHistorySummary();
       return;
     }
 
+    const recentHistory = getRecentHistory();
     historyList.innerHTML = '';
-    if (scoreHistory.length === 0) {
+
+    if (recentHistory.length === 0) {
       const item = document.createElement('li');
       item.className = 'history-empty';
       item.textContent = 'No completed games yet. Play and score to populate history.';
@@ -270,19 +401,63 @@
       return;
     }
 
-    scoreHistory.forEach((entry) => {
+    recentHistory.forEach((entry) => {
       const item = document.createElement('li');
       item.className = 'history-item';
       const date = new Date(entry.date);
       item.innerHTML = `
         <span class="history-result">${entry.result}</span>
         <span class="history-score">${entry.score} pts</span>
-        <span class="history-extra">${entry.width}×${entry.width}</span>
+        <span class="history-extra">${getDifficultyLabel(entry.difficulty || 'custom')} - ${entry.width}x${entry.width}</span>
         <span class="history-date">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>
       `;
       historyList.appendChild(item);
     });
     renderHistorySummary();
+  }
+
+  function renderLeaderboard() {
+    if (!leaderboardList) {
+      return;
+    }
+    const entries = getLeaderboardEntries(10, leaderboardFilter ? leaderboardFilter.value : 'all');
+    leaderboardList.innerHTML = '';
+
+    if (entries.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'history-empty';
+      empty.textContent = 'No leaderboard entries yet.';
+      leaderboardList.appendChild(empty);
+      return;
+    }
+
+    entries.forEach((entry, index) => {
+      const item = document.createElement('li');
+      item.className = 'leaderboard-item';
+      const date = new Date(entry.date);
+      item.innerHTML = `
+        <span class="leaderboard-rank">#${index + 1}</span>
+        <span>
+          <span class="leaderboard-name">${escapeHtml(entry.playerName || 'Player')}</span>
+          <span class="leaderboard-meta">${getDifficultyLabel(entry.difficulty || 'custom')} - ${entry.gridSize || 16}x${entry.gridSize || 16} - ${date.toLocaleDateString()}</span>
+        </span>
+        <span class="leaderboard-score">${entry.score}</span>
+      `;
+      leaderboardList.appendChild(item);
+    });
+  }
+
+  function renderSaveScoreState() {
+    const canSave = Boolean(lastCompletedGame && !lastCompletedGame.saved);
+    if (saveLeaderboardButton) {
+      saveLeaderboardButton.disabled = !canSave;
+    }
+    if (leaderboardForm) {
+      const submit = leaderboardForm.querySelector('button[type="submit"]');
+      if (submit) {
+        submit.disabled = !canSave;
+      }
+    }
   }
 
   function render() {
@@ -299,10 +474,21 @@
         const key = `${x},${y}`;
         cell.className = 'cell';
 
+        if (state.obstacles && state.obstacles.has(key)) {
+          cell.classList.add('obstacle');
+          continue;
+        }
+
         if (state.food && state.food.x === x && state.food.y === y) {
-          cell.classList.add('food');
-          if (state.food.bonus) {
-            cell.classList.add('food-bonus');
+          if (state.food.isFood === false) {
+            cell.classList.add('powerup-speed');
+          } else {
+            cell.classList.add('food');
+            if (state.food.type === 'super') {
+              cell.classList.add('food-super');
+            } else if (state.food.bonus || state.food.type === 'bonus') {
+              cell.classList.add('food-bonus');
+            }
           }
         }
 
@@ -326,17 +512,21 @@
     if (state.didWin) {
       status.textContent = 'You filled the whole board. Nice run.';
     } else if (state.isGameOver) {
-      status.textContent = 'Game over. Restart to play again.';
+      status.textContent = state.hitObstacle
+        ? 'Game over. The snake hit an obstacle.'
+        : 'Game over. Restart to play again.';
     } else if (!state.isStarted) {
       status.textContent = state.wrapWalls
         ? 'Press any arrow key or WASD to start. Wrap mode is on.'
         : 'Press any arrow key or WASD to start.';
     } else if (state.isPaused) {
       status.textContent = 'Paused.';
+    } else if (hasActiveEffect('speed-boost')) {
+      status.textContent = 'Speed boost active. Blue power-ups briefly quicken the pace.';
     } else {
       status.textContent = state.wrapWalls
         ? 'Wrap mode on. Golden cells are +5. Chain quick eats for combo.'
-        : 'Golden cells are +5. Chain quick eats for combo.';
+        : 'Golden cells are +5. Ember cells are +15. Blue cells are speed boosts.';
     }
 
     pauseButton.textContent = state.isPaused ? 'Resume' : 'Pause';
@@ -346,12 +536,14 @@
     if (gridSelect) {
       gridSelect.value = String(state.width);
     }
+    if (difficultySelect) {
+      difficultySelect.value = difficulty;
+    }
   }
-
-  let gameOverRecorded = false;
 
   function afterStep(prevScore) {
     const grew = state.score > prevScore;
+    const collectedPowerUp = Boolean(state.lastCollectedPowerUp);
     if (grew) {
       updateCombo(true);
       if (state.lastAteBonus) {
@@ -361,6 +553,10 @@
       }
     }
 
+    if (collectedPowerUp) {
+      playPowerUp();
+    }
+
     if (state.isGameOver) {
       if (!gameOverRecorded) {
         addScoreToHistory(state.score, state.width, state.didWin);
@@ -368,6 +564,8 @@
       }
       if (state.didWin) {
         playWin();
+      } else if (state.hitObstacle) {
+        playObstacle();
       } else {
         playGameOver();
       }
@@ -376,21 +574,28 @@
 
   function startLoop() {
     stopLoop();
-    timerId = window.setInterval(() => {
-      const prevScore = state.score;
-      state = step(state);
-      afterStep(prevScore);
-      render();
+    scheduleTick();
+  }
 
-      if (state.isGameOver) {
-        stopLoop();
-      }
-    }, tickMs);
+  function scheduleTick() {
+    timerId = window.setTimeout(runTick, getEffectiveTickMs());
+  }
+
+  function runTick() {
+    timerId = null;
+    const prevScore = state.score;
+    state = step(state);
+    afterStep(prevScore);
+    render();
+
+    if (state.isStarted && !state.isGameOver) {
+      scheduleTick();
+    }
   }
 
   function stopLoop() {
     if (timerId !== null) {
-      window.clearInterval(timerId);
+      window.clearTimeout(timerId);
       timerId = null;
     }
   }
@@ -407,76 +612,81 @@
     }
   }
 
-  function restart() {
-    state = createInitialState({
-      wrapWalls: wrapToggle.checked,
-      width: gridSize,
-      height: gridSize
-    });
+  function resetGame(message) {
+    state = createGameState();
     stopLoop();
     gameOverRecorded = false;
+    lastCompletedGame = null;
     resetComboDisplay();
+    cellGrid = null;
+    cachedW = 0;
+    cachedH = 0;
     render();
+    renderSaveScoreState();
+    if (message) {
+      status.textContent = message;
+    }
+  }
+
+  function restart() {
+    resetGame();
   }
 
   function handlePause() {
     state = togglePause(state);
     render();
+    if (state.isPaused) {
+      stopLoop();
+    } else if (state.isStarted && !state.isGameOver) {
+      startLoop();
+    }
+  }
+
+  function switchToCustomDifficulty() {
+    if (difficulty === 'custom') {
+      return;
+    }
+    saveDifficulty('custom');
+    if (difficultySelect) {
+      difficultySelect.value = 'custom';
+    }
   }
 
   function handleSpeedChange() {
     tickMs = Number.parseInt(speedSelect.value, 10) || DEFAULT_TICK_MS;
-
-    if (state.isStarted && !state.isGameOver) {
+    saveSpeed(tickMs);
+    switchToCustomDifficulty();
+    if (state.isStarted && !state.isGameOver && !state.isPaused) {
       startLoop();
     }
   }
 
   function handleWrapToggle() {
     const shouldExplainReset = state.isStarted || state.isPaused;
-    state = createInitialState({
-      wrapWalls: wrapToggle.checked,
-      width: gridSize,
-      height: gridSize
-    });
-    stopLoop();
-    resetComboDisplay();
-    render();
-
-    if (shouldExplainReset) {
-      status.textContent = 'Mode changed. Board reset for a fair run.';
-    }
+    resetGame(shouldExplainReset ? 'Mode changed. Board reset for a fair run.' : null);
   }
 
   function handleGridChange() {
     gridSize = Number.parseInt(gridSelect.value, 10) || 16;
-    window.localStorage.setItem(STORAGE_KEYS.grid, String(gridSize));
-    state = createInitialState({
-      wrapWalls: wrapToggle.checked,
-      width: gridSize,
-      height: gridSize
-    });
-    stopLoop();
-    resetComboDisplay();
-    cellGrid = null;
-    cachedW = 0;
-    cachedH = 0;
-    render();
-    status.textContent = 'Board size updated. Press arrows or WASD to start.';
+    saveGridSize(gridSize);
+    switchToCustomDifficulty();
+    resetGame('Board size updated. Press arrows or WASD to start.');
+  }
+
+  function handleDifficultyChange() {
+    saveDifficulty(difficultySelect.value);
+    applyPresetIfNeeded();
+    resetGame(`${getDifficultyLabel(difficulty)} difficulty selected. Press arrows or WASD to start.`);
   }
 
   document.addEventListener('keydown', (event) => {
+    const tagName = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
+    if (tagName === 'input' || tagName === 'textarea' || tagName === 'select' || event.target.isContentEditable) {
+      return;
+    }
+
     const key = event.key.toLowerCase();
-    const directionByKey = {
-      arrowup: 'up',
-      w: 'up',
-      arrowdown: 'down',
-      s: 'down',
-      arrowleft: 'left',
-      a: 'left',
-      arrowright: 'right',
-      d: 'right'
-    };
+    const direction = KEY_TO_DIRECTION[key];
 
     if (key === ' ') {
       event.preventDefault();
@@ -484,9 +694,9 @@
       return;
     }
 
-    if (directionByKey[key]) {
+    if (direction) {
       event.preventDefault();
-      updateDirection(directionByKey[key]);
+      updateDirection(direction);
     }
   });
 
@@ -497,12 +707,8 @@
   if (gridSelect) {
     gridSelect.addEventListener('change', handleGridChange);
   }
-  if (themeToggle) {
-    themeToggle.addEventListener('change', () => {
-      const mode = themeToggle.checked ? 'dark' : 'light';
-      saveTheme(mode);
-      applyTheme(mode);
-    });
+  if (difficultySelect) {
+    difficultySelect.addEventListener('change', handleDifficultyChange);
   }
   if (soundToggle) {
     soundToggle.checked = loadSoundEnabled();
@@ -514,16 +720,47 @@
       }
     });
   }
+  if (leaderboardFilter) {
+    leaderboardFilter.addEventListener('change', renderLeaderboard);
+  }
+  if (leaderboardForm) {
+    playerNameInput.value = window.localStorage.getItem(STORAGE_KEYS.playerName) || '';
+    leaderboardForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!lastCompletedGame || lastCompletedGame.saved) {
+        return;
+      }
+      addLeaderboardEntry(playerNameInput.value, lastCompletedGame);
+    });
+  }
+  if (saveLeaderboardButton) {
+    saveLeaderboardButton.addEventListener('click', () => {
+      if (leaderboardForm && typeof leaderboardForm.requestSubmit === 'function') {
+        leaderboardForm.requestSubmit();
+      }
+    });
+  }
 
   controlButtons.forEach((button) => {
     button.addEventListener('click', () => updateDirection(button.dataset.direction));
+    button.addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      updateDirection(button.dataset.direction);
+    }, { passive: false });
   });
 
-  applyTheme(loadTheme());
   if (gridSelect) {
     gridSelect.value = String(gridSize);
   }
+  if (speedSelect) {
+    speedSelect.value = String(tickMs);
+  }
+  if (difficultySelect) {
+    difficultySelect.value = difficulty;
+  }
 
   renderHistory();
+  renderLeaderboard();
+  renderSaveScoreState();
   render();
 })();

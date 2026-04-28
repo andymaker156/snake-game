@@ -12,7 +12,7 @@
       <div class="header">
         <div>
           <h1 id="game-title">Snake</h1>
-          <p class="subtitle">Classic grid movement, food, score, restart.</p>
+          <p class="subtitle">Arcade arena, quick runs, local leaderboard.</p>
         </div>
         <div class="scoreboard" aria-live="polite">
           <span>Score</span>
@@ -23,14 +23,24 @@
           <strong id="best-score">0</strong>
         </div>
         <div class="scoreboard score-streak" aria-live="polite">
-          <span>Streak</span>
-          <strong id="combo">—</strong>
+          <span>Combo</span>
+          <strong id="combo">-</strong>
         </div>
       </div>
 
       <div class="status-row">
         <p id="status">Press any arrow key or WASD to start.</p>
         <div class="actions">
+          <label class="field" for="difficulty-select">
+            <span>Difficulty</span>
+            <select id="difficulty-select">
+              <option value="custom" selected>Classic</option>
+              <option value="easy">Easy</option>
+              <option value="normal">Normal</option>
+              <option value="hard">Hard</option>
+              <option value="insane">Insane</option>
+            </select>
+          </label>
           <label class="field" for="speed-select">
             <span>Speed</span>
             <select id="speed-select">
@@ -43,18 +53,14 @@
           <label class="field" for="grid-select">
             <span>Board</span>
             <select id="grid-select">
-              <option value="12">12×12</option>
-              <option value="16" selected>16×16</option>
-              <option value="20">20×20</option>
+              <option value="12">12x12</option>
+              <option value="16" selected>16x16</option>
+              <option value="20">20x20</option>
             </select>
           </label>
           <label class="toggle" for="wrap-toggle">
             <input id="wrap-toggle" type="checkbox">
             <span>Wrap walls</span>
-          </label>
-          <label class="toggle" for="theme-toggle">
-            <input id="theme-toggle" type="checkbox">
-            <span>Dark</span>
           </label>
           <label class="toggle" for="sound-toggle">
             <input id="sound-toggle" type="checkbox">
@@ -72,17 +78,21 @@
         aria-label="Snake game board"
       ></div>
 
-      <section class="controls" aria-label="Touch controls">
-        <button type="button" data-direction="up" aria-label="Move up">Up</button>
-        <div class="controls-row">
-          <button type="button" data-direction="left" aria-label="Move left">Left</button>
-          <button type="button" data-direction="down" aria-label="Move down">Down</button>
-          <button type="button" data-direction="right" aria-label="Move right">Right</button>
+      <section class="controls" aria-label="Keyboard controls">
+        <div class="key-hints" aria-hidden="true">
+          <span>W</span>
+          <span>A</span>
+          <span>S</span>
+          <span>D</span>
         </div>
+        <p>Move with arrow keys or WASD. Space pauses. Combo increases when food is eaten in quick succession.</p>
       </section>
 
       <section class="history-panel" aria-labelledby="history-title">
-        <h2 id="history-title">Recent games</h2>
+        <div class="panel-heading">
+          <h2 id="history-title">Recent games</h2>
+          <button id="save-leaderboard-button" type="button">Save score</button>
+        </div>
         <div class="history-stats" role="group" aria-label="Game summary stats">
           <div>
             <strong id="history-games-played">0</strong>
@@ -101,7 +111,32 @@
         <ul id="score-history" class="history-list"></ul>
       </section>
 
-      <p class="help">Controls: Arrow keys or WASD. Space pauses. Golden food is worth 5 points. Streak counts quick consecutive eats. Sound uses short beeps (toggle off if you prefer silence).</p>
+      <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+        <div class="panel-heading">
+          <h2 id="leaderboard-title">Leaderboard</h2>
+          <label class="field" for="leaderboard-filter">
+            <span>Show</span>
+            <select id="leaderboard-filter">
+              <option value="all">All</option>
+              <option value="custom">Classic</option>
+              <option value="easy">Easy</option>
+              <option value="normal">Normal</option>
+              <option value="hard">Hard</option>
+              <option value="insane">Insane</option>
+            </select>
+          </label>
+        </div>
+        <form id="leaderboard-form" class="leaderboard-form">
+          <label class="field" for="player-name">
+            <span>Name</span>
+            <input id="player-name" maxlength="16" autocomplete="nickname" placeholder="Player">
+          </label>
+          <button type="submit">Add</button>
+        </form>
+        <ol id="leaderboard-list" class="leaderboard-list"></ol>
+      </section>
+
+      <p class="help">Golden food is worth 5 points, ember food is worth 15, and blue power-ups briefly speed up the snake.</p>
     </section>
   </main>
 

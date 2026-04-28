@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Controls - D-Pad Design</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f3efe7;
+      color: #2f2a24;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .demo-label {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .demo-label h2 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .demo-label p {
+      margin: 8px 0 0 0;
+      color: #6c6257;
+    }
+    .game-area {
+      background: #fffdf8;
+      border: 2px solid #d5cfc4;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12rem;
+    }
+    .controls-section {
+      background: white;
+      border: 1px solid #d5cfc4;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .controls-label {
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: block;
+      font-size: 0.95rem;
+    }
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 4px;
+      max-width: 188px;
+      margin: 0 auto;
+    }
+    .dpad-btn {
+      border: 2px solid #3f7d4a;
+      background: #e8f5e9;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.2rem;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .dpad-btn:active {
+      background: #3f7d4a;
+      color: white;
+      transform: scale(0.95);
+    }
+    .dpad-btn.up { grid-column: 2; grid-row: 1; }
+    .dpad-btn.left { grid-column: 1; grid-row: 2; }
+    .dpad-btn.center { grid-column: 2; grid-row: 2; }
+    .dpad-btn.right { grid-column: 3; grid-row: 2; }
+    .dpad-btn.down { grid-column: 2; grid-row: 3; }
+    .dpad-btn.center { visibility: hidden; }
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .action-btn {
+      padding: 12px;
+      border: 2px solid #cf5a3a;
+      background: #ffebee;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+    .action-btn:active {
+      background: #cf5a3a;
+      color: white;
+      transform: scale(0.95);
+    }
+    @media (max-width: 600px) {
+      .dpad-grid { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
+      .dpad-btn { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="demo-label">
+      <h2>📱 D-Pad Controls</h2>
+      <p>Gaming console style controls</p>
+    </div>
+
+    <div class="game-area">🐍</div>
+
+    <div class="controls-section">
+      <label class="controls-label">Direction Controls</label>
+      <div class="dpad-grid">
+        <button class="dpad-btn up">↑</button>
+        <button class="dpad-btn left">←</button>
+        <button class="dpad-btn center"></button>
+        <button class="dpad-btn right">→</button>
+        <button class="dpad-btn down">↓</button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="action-btn">Pause</button>
+        <button class="action-btn">Restart</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Controls - Swipe Gesture Design</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f3efe7;
+      color: #2f2a24;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .demo-label {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .demo-label h2 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .demo-label p {
+      margin: 8px 0 0 0;
+      color: #6c6257;
+      font-size: 0.95rem;
+    }
+    .gesture-area {
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+      border: 3px dashed #3f7d4a;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 24px;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .gesture-snake {
+      font-size: 5rem;
+    }
+    .gesture-hint {
+      font-size: 1rem;
+      color: #3f7d4a;
+      font-weight: 600;
+    }
+    .gesture-arrows {
+      font-size: 2rem;
+      color: #3f7d4a;
+      opacity: 0.5;
+    }
+    .controls-info {
+      background: white;
+      border: 1px solid #d5cfc4;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .control-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #efe8dc;
+    }
+    .control-item:last-child { border-bottom: none; }
+    .gesture-icon {
+      font-size: 2rem;
+      text-align: center;
+    }
+    .gesture-desc h3 { margin: 0 0 4px 0; font-size: 0.95rem; }
+    .gesture-desc p { margin: 0; color: #6c6257; font-size: 0.85rem; }
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .action-btn {
+      padding: 14px;
+      border: 2px solid #cf5a3a;
+      background: #ffebee;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .action-btn:active {
+      background: #cf5a3a;
+      color: white;
+      transform: scale(0.95);
+    }
+    @media (max-width: 600px) {
+      .gesture-area { padding: 20px; }
+      .gesture-snake { font-size: 3rem; }
+      .control-item { grid-template-columns: 70px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="demo-label">
+      <h2>👆 Gesture Controls</h2>
+      <p>Swipe to change direction</p>
+    </div>
+
+    <div class="gesture-area">
+      <div class="gesture-snake">🐍</div>
+      <div class="gesture-arrows">↑ ↓ ← →</div>
+      <div class="gesture-hint">Swipe anywhere to move</div>
+    </div>
+
+    <div class="controls-info">
+      <div class="control-item">
+        <div class="gesture-icon">⬆️</div>
+        <div class="gesture-desc">
+          <h3>Swipe Up</h3>
+          <p>Move snake upward</p>
+        </div>
+      </div>
+      <div class="control-item">
+        <div class="gesture-icon">⬇️</div>
+        <div class="gesture-desc">
+          <h3>Swipe Down</h3>
+          <p>Move snake downward</p>
+        </div>
+      </div>
+      <div class="control-item">
+        <div class="gesture-icon">⬅️</div>
+        <div class="gesture-desc">
+          <h3>Swipe Left</h3>
+          <p>Move snake left</p>
+        </div>
+      </div>
+      <div class="control-item">
+        <div class="gesture-icon">➡️</div>
+        <div class="gesture-desc">
+          <h3>Swipe Right</h3>
+          <p>Move snake right</p>
+        </div>
+      </div>
+      <div class="control-item">
+        <div class="gesture-icon">👆</div>
+        <div class="gesture-desc">
+          <h3>Tap</h3>
+          <p>Pause/Resume game</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn">Pause</button>
+      <button class="action-btn">Restart</button>
+    </div>
+  </div>
+</body>
+</html>

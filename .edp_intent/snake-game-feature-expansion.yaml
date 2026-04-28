@@ -1,0 +1,280 @@
+version: "1.0.0"
+generatedBy: "edp-6-mcp"
+timestamp: "2026-04-27T00:00:00Z"
+intentName: "snake-game-feature-expansion"
+
+originalIntent: |
+  Add new features to snake game: power-ups system, obstacles, special food types,
+  difficulty presets, mobile D-Pad controls, and leaderboard UI. Maintain code
+  quality and 70%+ pattern reuse. All client-side, no backend changes.
+
+scope:
+  allowedPaths:
+    - "public/snake-logic.js"
+    - "public/snake-game.js"
+    - "public/snake.css"
+    - "public/index.html"
+    - "app.js"
+  forbiddenPaths:
+    - "package.json"
+    - "README.md (section metadata only, feature docs allowed)"
+    - "scripts/test-mcp.ps1"
+    - ".vscode/mcp.json"
+  newFiles:
+    - "None (all features added to existing files)"
+
+apiContracts:
+  - name: "placeFood"
+    type: "function"
+    signature: "placeFood(snake, width, height, randomFn, includeObstacles=true)"
+    returns: "{ x, y, bonus, type? } | null"
+    sideEffects: "May place power-ups instead of food (randomized)"
+    required: true
+    existing: true
+    modification: "Extend to optionally return power-up objects"
+
+  - name: "placeObstacles"
+    type: "function"
+    signature: "placeObstacles(width, height, difficulty, randomFn)"
+    returns: "Set<'x,y'>"
+    sideEffects: "Randomly places obstacles based on difficulty"
+    required: true
+    existing: false
+    newFunction: true
+
+  - name: "activateEffect"
+    type: "function"
+    signature: "activateEffect(state, effectType, durationMs)"
+    returns: "{ ...state, activeEffects: [...] }"
+    sideEffects: "Adds effect to state.activeEffects array"
+    required: true
+    existing: false
+    newFunction: true
+
+  - name: "updateEffects"
+    type: "function"
+    signature: "updateEffects(state, elapsed)"
+    returns: "state (modified with expired effects removed)"
+    sideEffects: "Removes effects where currentTime >= expiresAt"
+    required: true
+    existing: false
+    newFunction: true
+
+  - name: "createInitialState"
+    type: "function"
+    signature: "createInitialState(config, randomFn)"
+    returns: "{ ...existing, activeEffects: [], obstacles: Set }"
+    sideEffects: "Extends state object with new properties"
+    required: true
+    existing: true
+    modification: "Add activeEffects and obstacles initialization"
+
+  - name: "step"
+    type: "function"
+    signature: "step(state, randomFn)"
+    returns: "state (modified)"
+    sideEffects: "Detects power-up/obstacle collisions"
+    required: true
+    existing: true
+    modification: "Add collision detection for power-ups and obstacles"
+
+  - name: "getLevelConfig"
+    type: "function"
+    signature: "getLevelConfig(difficulty)"
+    returns: "{ speed, gridSize, obstacleDensity, powerUpRate }"
+    sideEffects: "None"
+    required: true
+    existing: false
+    newFunction: true
+
+  - name: "addLeaderboardEntry"
+    type: "function"
+    signature: "addLeaderboardEntry(playerName, score, difficulty, gridSize, date)"
+    returns: "void"
+    sideEffects: "Persists entry to localStorage"
+    required: true
+    existing: false
+    newFunction: true
+
+  - name: "getLeaderboardEntries"
+    type: "function"
+    signature: "getLeaderboardEntries(limit, difficulty?, timeFilter?)"
+    returns: "[{ playerName, score, difficulty, date, rank }]"
+    sideEffects: "None"
+    required: true
+    existing: false
+    newFunction: true
+
+acceptanceCriteria:
+  - id: "AC-001"
+    title: "Power-up System Functional"
+    given: "Player has consumed a power-up item"
+    when: "Game tick executes during active power-up duration"
+    then: "Effect is applied (speed boost modifies tick rate) and persists until expiration"
+    validation: "Game loop frequency increases by 30% and returns to normal after duration"
+
+  - id: "AC-002"
+    title: "Obstacles Block Movement"
+    given: "Obstacle is placed on grid at coordinates (x, y)"
+    when: "Snake head moves to (x, y)"
+    then: "Game over state triggered (same as wall collision)"
+    validation: "Snake cannot occupy obstacle cell; game-over triggered"
+
+  - id: "AC-003"
+    title: "Special Food Types Award Correct Points"
+    given: "Food spawned with type: normal|bonus|super"
+    when: "Snake consumes food"
+    then: "Score increases by correct amount (1, 5, or 15 points respectively)"
+    validation: "Score display matches expected values after eating each food type"
+
+  - id: "AC-004"
+    title: "Difficulty Preset Applies All Settings"
+    given: "User selects 'Hard' difficulty"
+    when: "Game initializes"
+    then: "Speed=100ms, GridSize=20, Obstacles=8-12, PowerUpRate=5%"
+    validation: "Game board, game speed, and obstacle count match preset"
+
+  - id: "AC-005"
+    title: "D-Pad Controls Functional on Mobile"
+    given: "User on mobile device taps D-Pad arrow button"
+    when: "Touch event fires on button element"
+    then: "Snake direction changes (same as keyboard arrow key)"
+    validation: "Snake moves in tapped direction; works across all directions"
+
+  - id: "AC-006"
+    title: "Leaderboard Persists and Displays"
+    given: "Player completes game with score > 500"
+    when: "Game over and player enters name"
+    then: "Entry saved to localStorage and appears in leaderboard top 50"
+    validation: "Leaderboard displays player name, score, date in correct rank order"
+
+  - id: "AC-007"
+    title: "No Breaking Changes to Core Game"
+    given: "Existing game running on v1.0"
+    when: "New feature code executes"
+    then: "Classic game mode (no difficulty preset) still functional"
+    validation: "Original 3 speed presets and 3 grid sizes still available and work"
+
+  - id: "AC-008"
+    title: "Performance Maintained"
+    given: "Game with obstacles, power-ups, and active effects"
+    when: "Game loop executes"
+    then: "Frame rate ≥ 30fps even on 12×12 with 15+ obstacles"
+    validation: "No visual lag; render completes in <33ms per frame"
+
+  - id: "AC-009"
+    title: "localStorage Backward Compatibility"
+    given: "User has existing score history from v1.0"
+    when: "New version loads"
+    then: "Old score history loads without corruption; new fields initialize with defaults"
+    validation: "Score history persists; new entries include difficulty metadata"
+
+  - id: "AC-010"
+    title: "Code Reuse >= 70%"
+    given: "All features implemented"
+    when: "Code review calculates pattern reuse"
+    then: "At least 70% of functionality extends existing patterns vs. new code"
+    validation: "Reuse assessment: existing placeFood extended, step collision logic extended, etc."
+
+nonGoals:
+  - "Backend leaderboard service or database"
+  - "Real-time multiplayer or live leaderboard sync"
+  - "Advanced power-up combinations or chaining mechanics"
+  - "Procedural level generation or infinite difficulty scaling"
+  - "New game modes beyond difficulty presets"
+  - "User accounts or authentication"
+  - "Replay system or video recording"
+  - "In-app purchases or monetization"
+  - "Advanced accessibility features beyond basic keyboard"
+  - "Analytics or telemetry tracking"
+
+complexityBudget:
+  maxNewFunctions: 8
+  maxNewFiles: 0
+  maxLinesOfCode: 300
+  maxDependencies: 0
+  rationale: |
+    All features implemented within existing files. Complexity kept minimal by
+    extending existing functions rather than creating elaborate abstractions.
+    Power-ups use simple effect array, obstacles use Set for O(1) lookup,
+    leaderboard reuses localStorage abstraction. No new dependencies required.
+
+implementationPhases:
+  phase1:
+    title: "Special Food Types (Foundation)"
+    files: ["public/snake-logic.js", "public/snake-game.js", "public/snake.css"]
+    effort: "1-2 hours"
+    riskLevel: "Low"
+    rationale: "Extends existing food.bonus flag to food.type field. Minimal changes."
+
+  phase2:
+    title: "Power-ups System"
+    files: ["public/snake-logic.js", "public/snake-game.js"]
+    effort: "2-3 hours"
+    riskLevel: "Medium"
+    rationale: "Adds activeEffects array to state. Requires state shape validation."
+
+  phase3:
+    title: "Obstacles"
+    files: ["public/snake-logic.js", "public/snake-game.js", "public/snake.css"]
+    effort: "2-3 hours"
+    riskLevel: "Medium"
+    rationale: "New collision detection in step(). Uses Set for efficient lookup."
+
+  phase4:
+    title: "Difficulty Presets"
+    files: ["public/snake-game.js", "public/index.html"]
+    effort: "1-2 hours"
+    riskLevel: "Low"
+    rationale: "Refactors existing speed/grid selects to preset selector. Config only."
+
+  phase5:
+    title: "D-Pad Mobile Controls"
+    files: ["public/snake-game.js", "public/index.html", "public/snake.css"]
+    effort: "1-2 hours"
+    riskLevel: "Low"
+    rationale: "New touch event handlers. Non-breaking to existing keyboard controls."
+
+  phase6:
+    title: "Leaderboard UI"
+    files: ["public/snake-game.js", "public/index.html", "public/snake.css"]
+    effort: "2-3 hours"
+    riskLevel: "Low"
+    rationale: "Extends existing score history UI. Reuses localStorage abstraction."
+
+riskAssessment:
+  - risk: "State object grows too large"
+    mitigation: "activeEffects and obstacles remain compact; Set lookup is O(1)"
+    impact: "Low"
+
+  - risk: "Obstacle spawn locations conflict with food"
+    mitigation: "Pass snake+obstacles to placeFood() to avoid overlaps"
+    impact: "Medium"
+    resolution: "Algorithm ensures obstacles and food never occupy same cell"
+
+  - risk: "Mobile D-Pad buttons interfere with existing UI"
+    mitigation: "New elements only; no event listener conflicts"
+    impact: "Low"
+
+  - risk: "Power-up duration tracking causes memory leaks"
+    mitigation: "Expired effects removed each tick; Set cleaned on effect removal"
+    impact: "Medium"
+    resolution: "Automatic cleanup during updateEffects() call"
+
+  - risk: "localStorage quota exceeded with large leaderboard"
+    mitigation: "Cap leaderboard at 50 entries; prune oldest on overflow"
+    impact: "Low"
+
+  - risk: "Difficulty preset changes break existing game state"
+    mitigation: "Presets only apply on new game start; running game config unchanged"
+    impact: "Medium"
+    resolution: "Clear validation: presets only trigger on game reset"
+
+successMetrics:
+  - "All 10 acceptance criteria pass"
+  - "Code reuse analysis shows >= 70% extension of existing patterns"
+  - "Zero breaking changes to existing game functionality"
+  - "Frame rate maintained >= 30fps under load"
+  - "localStorage quota usage < 100KB"
+  - "Mobile D-Pad controls work on devices with non-standard touch support"
+  - "Leaderboard correctly sorts and filters entries"

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Concept - Arcade Focus</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #07090d;
+      --panel: rgba(14, 18, 24, 0.9);
+      --panel-2: rgba(255, 255, 255, 0.07);
+      --line: rgba(184, 255, 95, 0.22);
+      --text: #f5f8ee;
+      --muted: #9facb8;
+      --snake: #a7ff58;
+      --food: #ff4d73;
+      --gold: #ffd447;
+      --blue: #4fc7ff;
+    }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 20%, rgba(167,255,88,0.18), transparent 30%),
+        #07090d;
+      background-size: 38px 38px, 38px 38px, auto, auto;
+      color: var(--text);
+    }
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      padding: 18px;
+    }
+    .topbar, .bottombar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+    h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0; text-transform: uppercase; color: var(--snake); }
+    .status { margin: 4px 0 0; color: var(--muted); }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .stat {
+      min-width: 86px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: var(--panel-2);
+      text-align: right;
+    }
+    .stat span { display: block; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
+    .stat strong { display: block; margin-top: 2px; font-size: 1.35rem; }
+    .arena-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+    }
+    .board {
+      width: min(82vh, 100%);
+      max-width: 720px;
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 3px;
+      padding: 14px;
+      border: 2px solid rgba(167,255,88,0.38);
+      border-radius: 18px;
+      background: radial-gradient(circle, rgba(167,255,88,0.09), transparent 62%), #11151d;
+      box-shadow: 0 0 42px rgba(167,255,88,0.14), inset 0 0 52px rgba(0,0,0,0.55);
+    }
+    .cell { border-radius: 999px; background: rgba(255,255,255,0.055); }
+    .snake { background: linear-gradient(135deg, var(--snake), #32d65b); box-shadow: 0 0 10px rgba(167,255,88,0.5); }
+    .head { background: radial-gradient(circle at 34% 30%, #fff, var(--snake) 34%, #22b954); }
+    .food { background: radial-gradient(circle at 35% 30%, #fff1f5, var(--food) 52%, #aa1839); box-shadow: 0 0 14px rgba(255,77,115,0.5); }
+    .gold { background: radial-gradient(circle at 35% 30%, #fff7c2, var(--gold) 55%, #b57a00); box-shadow: 0 0 16px rgba(255,212,71,0.58); }
+    .blue { background: radial-gradient(circle at 35% 30%, #e4f5ff, var(--blue) 58%, #1e527d); box-shadow: 0 0 16px rgba(79,199,255,0.5); }
+    .bottombar { grid-template-columns: 1fr; }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    button, select {
+      min-height: 44px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 9px 13px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+    }
+    button:focus-visible, select:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+    @media (max-width: 720px) {
+      main { padding: 10px; }
+      .topbar { grid-template-columns: 1fr; }
+      .stats { justify-content: stretch; }
+      .stat { flex: 1; text-align: left; }
+      .board { width: 100%; padding: 8px; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1>Snake</h1>
+        <p class="status">Golden food spawned. Chain the next bite for streak.</p>
+      </div>
+      <div class="stats" aria-label="Game statistics">
+        <div class="stat"><span>Score</span><strong>42</strong></div>
+        <div class="stat"><span>Best</span><strong>128</strong></div>
+        <div class="stat"><span>Streak</span><strong>x3</strong></div>
+      </div>
+    </header>
+    <section class="arena-wrap" aria-label="Focused game arena">
+      <div class="board" aria-label="Snake game board">
+        <script>
+          const filled = new Map([[120,'head'],[121,'snake'],[122,'snake'],[138,'snake'],[154,'snake'],[170,'snake'],[82,'food'],[205,'gold'],[33,'blue']]);
+          for (let i = 0; i < 256; i += 1) {
+            const div = document.createElement('div');
+            div.className = `cell ${filled.get(i) || ''}`;
+            document.currentScript.parentElement.appendChild(div);
+          }
+        </script>
+      </div>
+    </section>
+    <footer class="bottombar">
+      <div class="controls" aria-label="Game settings">
+        <select aria-label="Difficulty"><option>Classic</option><option>Hard</option></select>
+        <select aria-label="Board"><option>16x16</option><option>20x20</option></select>
+        <button>Pause</button>
+        <button>Restart</button>
+        <button>Sound</button>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
